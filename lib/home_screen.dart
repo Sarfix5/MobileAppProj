@@ -1,4 +1,6 @@
+import 'package:expense_tracker/Databasehandler.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 void main() => runApp(MyApp());
 
@@ -30,11 +32,13 @@ class Expense {
   final String id;
   final double amount;
   final Category category;
+  final DateTime date;
 
   Expense({
     required this.id,
     required this.amount,
     required this.category,
+    required this.date,
   });
 }
 
@@ -44,64 +48,137 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final DatabaseHandler dbHandler = DatabaseHandler();
   List<Expense> expenses = [];
   List<Category> categories = [
     Category(
       id: 'c1',
       title: 'Food',
       icon: Icons.fastfood,
-      color: Colors.redAccent,
+      color: Colors.yellowAccent,
     ),
     Category(
       id: 'c2',
-      title: 'Transport',
-      icon: Icons.directions_bus,
-      color: Colors.green,
+      title: 'Gas',
+      icon: Icons.car_crash,
+      color: Colors.blueAccent,
+    ),
+    Category(
+      id: 'c3',
+      title: 'Housing & Utilities',
+      icon: Icons.house,
+      color: Colors.orangeAccent,
+    ),
+    Category(
+      id: 'c4',
+      title: 'Entertainment',
+      icon: Icons.videogame_asset,
+      color: Colors.greenAccent,
+    ),
+    Category(
+      id: 'c5',
+      title: 'Shopping',
+      icon: Icons.shopping_bag,
+      color: Colors.redAccent,
+    ),
+    Category(
+      id: 'c6',
+      title: 'Credit Cards',
+      icon: Icons.add_card,
+      color: Colors.deepPurpleAccent,
     ),
     // Add more categories as needed
   ];
+  DateTime currentMonth = DateTime.now();
 
-  void _addNewExpense(double amount, Category category) {
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
+
+  void _loadExpenses() async {
+    var loadedExpenses = await dbHandler.getExpenses(categories);
+    setState(() {
+      expenses = loadedExpenses ?? [];
+    });
+  }
+
+  void _addNewExpense(double amount, Category category, DateTime date) async {
     final newExpense = Expense(
       id: DateTime.now().toString(),
       amount: amount,
       category: category,
+      date: date,
     );
 
-    setState(() {
-      expenses.add(newExpense);
-    });
+    await dbHandler.saveExpense(newExpense);
+    _loadExpenses();
   }
 
   void _showAddExpenseDialog(BuildContext context, Category category) {
     final TextEditingController amountController = TextEditingController();
+    DateTime _selectedDate = DateTime.now();
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Add Expense'),
-          content: TextField(
-            controller: amountController,
-            decoration: InputDecoration(labelText: 'Amount (\$)'),
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              child: Text('Add'),
-              onPressed: () {
-                final amount = double.tryParse(amountController.text);
-                if (amount != null && amount > 0) {
-                  _addNewExpense(amount, category);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Add Expense'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: amountController,
+                    decoration: InputDecoration(labelText: 'Amount (\$)'),
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  ),
+                  SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Text(
+                        'Selected date: ${DateFormat.yMd().format(_selectedDate)}',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.calendar_today),
+                        onPressed: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedDate,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2100),
+                          );
+                          if (picked != null && picked != _selectedDate) {
+                            setState(() {
+                              _selectedDate = picked;
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  child: Text('Add'),
+                  onPressed: () {
+                    final amount = double.tryParse(amountController.text);
+                    if (amount != null && amount > 0) {
+                      _addNewExpense(amount, category, _selectedDate);
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -109,11 +186,36 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double totalExpenses = expenses.fold(0.0, (sum, exp) => sum + exp.amount);
+    double monthlyExpenses = expenses
+        .where((exp) => exp.date.month == currentMonth.month && exp.date.year == currentMonth.year)
+        .fold(0.0, (sum, exp) => sum + exp.amount);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Total Expenses: \$${totalExpenses.toStringAsFixed(2)}'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                setState(() {
+                  currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
+                  _loadExpenses(); // Reload expenses based on the changed month
+                });
+              },
+            ),
+            Text('${DateFormat.yMMM().format(currentMonth)}: \$${monthlyExpenses.toStringAsFixed(2)}'),
+            IconButton(
+              icon: Icon(Icons.arrow_forward),
+              onPressed: () {
+                setState(() {
+                  currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
+                  _loadExpenses(); // Reload expenses based on the changed month
+                });
+              },
+            ),
+          ],
+        ),
       ),
       body: GridView.builder(
         padding: EdgeInsets.all(10),
@@ -126,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         itemBuilder: (context, index) {
           final category = categories[index];
-          final categoryExpenses = expenses.where((exp) => exp.category.id == category.id).toList();
+          final categoryExpenses = expenses.where((exp) => exp.category.id == category.id && exp.date.month == currentMonth.month && exp.date.year == currentMonth.year).toList();
           double categoryTotal = categoryExpenses.fold(0.0, (sum, exp) => sum + exp.amount);
 
           return GestureDetector(

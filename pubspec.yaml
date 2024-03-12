@@ -35,10 +35,11 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   provider: ^6.0.0 # For state management
-  sqflite: ^2.0.0+4 # SQLite database
+  sqflite: ^2.3.2 # SQLite database
   path_provider: ^2.0.2 # To find the correct path for storing the database
   flutter_local_notifications: ^9.0.0 # For budget goal notifications
   charts_flutter: ^0.11.0 # For visual reports
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:
