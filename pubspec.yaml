@@ -38,8 +38,10 @@ dependencies:
   sqflite: ^2.3.2 # SQLite database
   path_provider: ^2.0.2 # To find the correct path for storing the database
   flutter_local_notifications: ^9.0.0 # For budget goal notifications
-  charts_flutter: ^0.11.0 # For visual reports
+  charts_flutter: ^0.12.0 # For visual reports
   intl: ^0.17.0
+  table_calendar: ^3.0.3
+  fl_chart: ^0.66.2
 
 dev_dependencies:
   flutter_test:

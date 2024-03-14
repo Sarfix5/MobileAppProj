@@ -1,18 +1,8 @@
-import 'package:expense_tracker/Databasehandler.dart';
+import 'package:expense_tracker/data_base.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Expenses App',
-      home: HomeScreen(),
-    );
-  }
-}
 
 class Category {
   final String id;
@@ -55,37 +45,43 @@ class _HomeScreenState extends State<HomeScreen> {
       id: 'c1',
       title: 'Food',
       icon: Icons.fastfood,
-      color: Colors.yellowAccent,
+      // color: Colors.yellowAccent,
+      color: Colors.black54,
     ),
     Category(
       id: 'c2',
       title: 'Gas',
       icon: Icons.car_crash,
-      color: Colors.blueAccent,
+      // color: Colors.blueAccent,
+      color: Colors.black54,
     ),
     Category(
       id: 'c3',
       title: 'Housing & Utilities',
       icon: Icons.house,
-      color: Colors.orangeAccent,
+      // color: Colors.orangeAccent,
+      color: Colors.black54,
     ),
     Category(
       id: 'c4',
       title: 'Entertainment',
       icon: Icons.videogame_asset,
-      color: Colors.greenAccent,
+      // color: Colors.greenAccent,
+      color: Colors.black54,
     ),
     Category(
       id: 'c5',
       title: 'Shopping',
       icon: Icons.shopping_bag,
-      color: Colors.redAccent,
+      // color: Colors.redAccent,
+      color: Colors.black54,
     ),
     Category(
       id: 'c6',
       title: 'Credit Cards',
       icon: Icons.add_card,
-      color: Colors.deepPurpleAccent,
+      // color: Colors.deepPurpleAccent,
+      color: Colors.black54,
     ),
     // Add more categories as needed
   ];
@@ -94,8 +90,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _saveCategoriesIfNeeded();
     _loadExpenses();
   }
+  void _saveCategoriesIfNeeded() async {
+  final existingCategories = await dbHandler.getCategories();
+  if (existingCategories.isEmpty) {
+    for (final category in categories) {
+      await dbHandler.saveCategory(category);
+    }
+  }
+}
 
   void _loadExpenses() async {
     var loadedExpenses = await dbHandler.getExpenses(categories);
@@ -124,8 +129,12 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
+
           builder: (context, setState) {
             return AlertDialog(
+              backgroundColor: Colors.white,
+              shadowColor: Colors.white,
+              surfaceTintColor: Colors.white,
               title: Text('Add Expense'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -142,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Selected date: ${DateFormat.yMd().format(_selectedDate)}',
                       ),
                       IconButton(
-                        icon: Icon(Icons.calendar_today),
+                        icon: Icon(Icons.calendar_today,color: Colors.black,),
                         onPressed: () async {
                           final DateTime? picked = await showDatePicker(
                             context: context,
@@ -163,11 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: <Widget>[
                 TextButton(
-                  child: Text('Cancel'),
+                  child: Text('Cancel',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 TextButton(
-                  child: Text('Add'),
+                  child: Text('Add',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
                   onPressed: () {
                     final amount = double.tryParse(amountController.text);
                     if (amount != null && amount > 0) {
@@ -176,6 +185,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                   },
                 ),
+                TextButton(
+                  child: Text('Reset Expenses',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
+                  onPressed: () async {
+                    // Call the method to delete expenses for this category
+                    await dbHandler.deleteExpensesByCategory(category.id);
+                    Navigator.of(context).pop(); // Close the dialog
+                    _loadExpenses(); // Refresh the expenses list
+              }
+              ),
               ],
             );
           },
@@ -191,7 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
         .fold(0.0, (sum, exp) => sum + exp.amount);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -239,9 +259,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Icon(category.icon, size: 40, color: Colors.white),
+                    Container(height: 1,width: 1,),
+                    Container(height: 1,width: 1,),
                     Text(
                       category.title,
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),

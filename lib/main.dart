@@ -1,30 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import './home_screen.dart';
-import './reports_screen.dart';
+import 'budget_screen.dart';
 import './settings_screen.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  // Set app to fullscreen
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  
+  runApp(const MyApp());
+}
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Budget Tracker',
+      debugShowCheckedModeBanner: false, // Removes the debug banner
       home: MainScreen(),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  MainScreenState createState() => MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final List<Widget> _children = [
     HomeScreen(),
-    ReportsScreen(),
+    BudgetScreen(),
     SettingsScreen(),
   ];
 
@@ -37,18 +49,22 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _selectedIndex,
         children: _children,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.black,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Reports'),
+          BottomNavigationBarItem(icon: Icon(Icons.home,), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
+
       ),
     );
   }
