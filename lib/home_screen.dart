@@ -2,8 +2,6 @@ import 'package:expense_tracker/data_base.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-
-
 class Category {
   final String id;
   final String title;
@@ -45,45 +43,38 @@ class _HomeScreenState extends State<HomeScreen> {
       id: 'c1',
       title: 'Food',
       icon: Icons.fastfood,
-      // color: Colors.yellowAccent,
       color: Colors.black54,
     ),
     Category(
       id: 'c2',
       title: 'Gas',
       icon: Icons.car_crash,
-      // color: Colors.blueAccent,
       color: Colors.black54,
     ),
     Category(
       id: 'c3',
       title: 'Housing & Utilities',
       icon: Icons.house,
-      // color: Colors.orangeAccent,
       color: Colors.black54,
     ),
     Category(
       id: 'c4',
       title: 'Entertainment',
       icon: Icons.videogame_asset,
-      // color: Colors.greenAccent,
       color: Colors.black54,
     ),
     Category(
       id: 'c5',
       title: 'Shopping',
       icon: Icons.shopping_bag,
-      // color: Colors.redAccent,
       color: Colors.black54,
     ),
     Category(
       id: 'c6',
       title: 'Credit Cards',
       icon: Icons.add_card,
-      // color: Colors.deepPurpleAccent,
       color: Colors.black54,
     ),
-    // Add more categories as needed
   ];
   DateTime currentMonth = DateTime.now();
 
@@ -188,10 +179,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton(
                   child: Text('Reset Expenses',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
                   onPressed: () async {
-                    // Call the method to delete expenses for this category
                     await dbHandler.deleteExpensesByCategory(category.id);
-                    Navigator.of(context).pop(); // Close the dialog
-                    _loadExpenses(); // Refresh the expenses list
+                    Navigator.of(context).pop();
+                    _loadExpenses(); 
               }
               ),
               ],
@@ -220,7 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 setState(() {
                   currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
-                  _loadExpenses(); // Reload expenses based on the changed month
+                  _loadExpenses(); 
                 });
               },
             ),
@@ -230,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 setState(() {
                   currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
-                  _loadExpenses(); // Reload expenses based on the changed month
+                  _loadExpenses(); 
                 });
               },
             ),

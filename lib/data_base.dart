@@ -3,15 +3,15 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-
-// Assuming the following imports correctly point to your models.
-// If not, adjust the import paths to correctly locate your Category and Expense models.
-import 'package:expense_tracker/home_screen.dart';
+import 'package:expense_tracker/home_screen.dart'; 
 
 class DatabaseHandler {
   static final DatabaseHandler _instance = DatabaseHandler.internal();
   factory DatabaseHandler() => _instance;
   static Database? _db;
+
+  final _dbUpdateStreamController = StreamController<bool>.broadcast();
+  Stream<bool> get dbUpdatesStream => _dbUpdateStreamController.stream;
 
   Future<Database?> get db async {
     if (_db != null) return _db;
@@ -59,6 +59,7 @@ class DatabaseHandler {
       'categoryId': expense.category.id,
       'date': expense.date.toIso8601String(),
     });
+    _dbUpdateStreamController.add(true); 
     return res;
   }
 
@@ -70,17 +71,16 @@ class DatabaseHandler {
       'icon': category.icon.codePoint,
       'color': category.color.value,
     });
+    _dbUpdateStreamController.add(true);
     return res;
   }
 
-  
-  // Get Expenses
   Future<List<Expense>> getExpenses(List<Category> categories) async {
     var dbClient = await db;
     List<Map> list = await dbClient!.rawQuery('SELECT * FROM Expense');
     List<Expense> expenses = [];
     for (int i = 0; i < list.length; i++) {
-      var expense = new Expense(
+      var expense = Expense(
         id: list[i]["id"],
         amount: list[i]["amount"],
         category: categories.firstWhere((category) => category.id == list[i]["categoryId"]),
@@ -90,14 +90,13 @@ class DatabaseHandler {
     }
     return expenses;
   }
-  
-  // Get Categories
+
   Future<List<Category>> getCategories() async {
     var dbClient = await db;
     List<Map> list = await dbClient!.rawQuery('SELECT * FROM Category');
     List<Category> categories = [];
     for (int i = 0; i < list.length; i++) {
-      var category = new Category(
+      var category = Category(
         id: list[i]["id"],
         title: list[i]["title"],
         icon: IconData(list[i]["icon"], fontFamily: 'MaterialIcons'),
@@ -108,30 +107,32 @@ class DatabaseHandler {
     return categories;
   }
 
-  // Deletion
   Future<int> deleteExpense(String id) async {
     var dbClient = await db;
-    return await dbClient!.delete("Expense", where: 'id = ?', whereArgs: [id]);
+    int res = await dbClient!.delete("Expense", where: 'id = ?', whereArgs: [id]);
+    _dbUpdateStreamController.add(true); 
+    return res;
   }
 
-  // Update
   Future<int> updateExpense(Expense expense) async {
     var dbClient = await db;
-    return await dbClient!.update("Expense", {
+    int res = await dbClient!.update("Expense", {
       'id': expense.id,
       'amount': expense.amount,
       'categoryId': expense.category.id,
       'date': expense.date.toIso8601String(),
     }, where: "id = ?", whereArgs: [expense.id]);
+    _dbUpdateStreamController.add(true); 
+    return res;
   }
 
-  // Reset
   Future<int> deleteExpensesByCategory(String categoryId) async {
     var dbClient = await db;
-    return await dbClient!.delete("Expense", where: 'categoryId = ?', whereArgs: [categoryId]);
+    int res = await dbClient!.delete("Expense", where: 'categoryId = ?', whereArgs: [categoryId]);
+    _dbUpdateStreamController.add(true); 
+    return res;
   }
 
-  // New method to aggregate expenses by category
   Future<List<Map<String, dynamic>>> getAggregatedExpensesByCategory() async {
     var dbClient = await db;
     List<Map> list = await dbClient!.rawQuery('''
@@ -141,7 +142,6 @@ class DatabaseHandler {
       GROUP BY c.title
     ''');
 
-    // Converting the query result into a List<Map<String, dynamic>> for easier usage in Flutter widgets
     List<Map<String, dynamic>> aggregatedExpenses = list.map((item) => {
       "title": item["title"],
       "totalAmount": item["totalAmount"],
@@ -150,6 +150,7 @@ class DatabaseHandler {
     return aggregatedExpenses;
   }
 
-
-
+  void dispose() {
+    _dbUpdateStreamController.close();
+  }
 }

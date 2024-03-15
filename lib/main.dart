@@ -1,11 +1,10 @@
+import 'package:expense_tracker/reports_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import './home_screen.dart';
-import 'budget_screen.dart';
 import './settings_screen.dart';
 
 void main() {
-  // Set app to fullscreen
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   
@@ -19,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Budget Tracker',
-      debugShowCheckedModeBanner: false, // Removes the debug banner
+      debugShowCheckedModeBanner: false, 
       home: MainScreen(),
     );
   }
@@ -36,7 +35,7 @@ class MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
   final List<Widget> _children = [
     HomeScreen(),
-    BudgetScreen(),
+    ReportsScreen(),
     SettingsScreen(),
   ];
 
