@@ -1,25 +1,35 @@
-import 'package:expense_tracker/reports_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import './home_screen.dart';
-import './settings_screen.dart';
+import 'package:provider/provider.dart';
+import 'home_screen.dart';
+import 'reports_screen.dart';
+import 'settings_screen.dart';
+import 'theme_provider.dart'; // Ensure you have this file created as per the previous instructions
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  
-  runApp(const MyApp());
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+  // Removed the const constructor for MyApp to use Provider below
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Budget Tracker',
-      debugShowCheckedModeBanner: false, 
-      home: MainScreen(),
+    // Wrap MaterialApp with ChangeNotifierProvider for theme management
+    return ChangeNotifierProvider(
+      create: (_) => ThemeProvider(ThemeData.light()), // Default theme is light
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Budget Tracker',
+            debugShowCheckedModeBanner: false,
+            theme: themeProvider.getTheme(),
+            home: const MainScreen(),
+          );
+        },
+      ),
     );
   }
 }
@@ -48,22 +58,19 @@ class MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: IndexedStack(
         index: _selectedIndex,
         children: _children,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
+        selectedItemColor: Theme.of(context).colorScheme.secondary, // Adjusted to use theme
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home,), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Budget'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'Reports'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-
       ),
     );
   }

@@ -39,62 +39,29 @@ class _HomeScreenState extends State<HomeScreen> {
   final DatabaseHandler dbHandler = DatabaseHandler();
   List<Expense> expenses = [];
   List<Category> categories = [
-    Category(
-      id: 'c1',
-      title: 'Food',
-      icon: Icons.fastfood,
-      color: Colors.black54,
-    ),
-    Category(
-      id: 'c2',
-      title: 'Gas',
-      icon: Icons.car_crash,
-      color: Colors.black54,
-    ),
-    Category(
-      id: 'c3',
-      title: 'Housing & Utilities',
-      icon: Icons.house,
-      color: Colors.black54,
-    ),
-    Category(
-      id: 'c4',
-      title: 'Entertainment',
-      icon: Icons.videogame_asset,
-      color: Colors.black54,
-    ),
-    Category(
-      id: 'c5',
-      title: 'Shopping',
-      icon: Icons.shopping_bag,
-      color: Colors.black54,
-    ),
-    Category(
-      id: 'c6',
-      title: 'Credit Cards',
-      icon: Icons.add_card,
-      color: Colors.black54,
-    ),
+    Category(id: 'c1', title: 'Food', icon: Icons.fastfood, color: Colors.grey),
+    Category(id: 'c2', title: 'Gas', icon: Icons.car_crash, color: Colors.grey),
+    Category(id: 'c3', title: 'Housing & Utilities', icon: Icons.house, color: Colors.grey),
+    Category(id: 'c4', title: 'Entertainment', icon: Icons.videogame_asset, color: Colors.grey),
+    Category(id: 'c5', title: 'Shopping', icon: Icons.shopping_bag, color: Colors.grey),
+    Category(id: 'c6', title: 'Credit Cards', icon: Icons.add_card, color: Colors.grey),
   ];
   DateTime currentMonth = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _saveCategoriesIfNeeded();
     _loadExpenses();
+
+    dbHandler.dbUpdatesStream.listen((_) {
+      if (mounted) {
+        _loadExpenses();
+      }
+    });
   }
-  void _saveCategoriesIfNeeded() async {
-  final existingCategories = await dbHandler.getCategories();
-  if (existingCategories.isEmpty) {
-    for (final category in categories) {
-      await dbHandler.saveCategory(category);
-    }
-  }
-}
 
   void _loadExpenses() async {
-    var loadedExpenses = await dbHandler.getExpenses(categories);
+    var loadedExpenses = await dbHandler.getExpenses(categories, currentMonth.month, currentMonth.year);
     setState(() {
       expenses = loadedExpenses ?? [];
     });
@@ -119,89 +86,80 @@ class _HomeScreenState extends State<HomeScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: Colors.white,
-              shadowColor: Colors.white,
-              surfaceTintColor: Colors.white,
-              title: Text('Add Expense'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: amountController,
-                    decoration: InputDecoration(labelText: 'Amount (\$)'),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text(
-                        'Selected date: ${DateFormat.yMd().format(_selectedDate)}',
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.calendar_today,color: Colors.black,),
-                        onPressed: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate: _selectedDate,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null && picked != _selectedDate) {
-                            setState(() {
-                              _selectedDate = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                TextButton(
-                  child: Text('Cancel',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
-                  onPressed: () => Navigator.of(context).pop(),
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).dialogBackgroundColor,
+            title: Text('Add Expense', style: TextStyle(color: Theme.of(context).textTheme.headline6?.color)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: amountController,
+                  decoration: InputDecoration(labelText: 'Amount (\$)'),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ),
-                TextButton(
-                  child: Text('Add',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold),),
-                  onPressed: () {
-                    final amount = double.tryParse(amountController.text);
-                    if (amount != null && amount > 0) {
-                      _addNewExpense(amount, category, _selectedDate);
-                      Navigator.of(context).pop();
-                    }
-                  },
+                SizedBox(height: 10),
+                Row(
+                  children: [
+                    Text('Selected date: ${DateFormat.yMd().format(_selectedDate)}', style: TextStyle(color: Theme.of(context).textTheme.bodyText1?.color)),
+                    IconButton(
+                      icon: Icon(Icons.calendar_today, color: Theme.of(context).iconTheme.color),
+                      onPressed: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null && picked != _selectedDate) {
+                          setState(() {
+                            _selectedDate = picked;
+                          });
+                        }
+                      },
+                    ),
+                  ],
                 ),
-                TextButton(
-                  child: Text('Reset Expenses',style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
-                  onPressed: () async {
-                    await dbHandler.deleteExpensesByCategory(category.id);
-                    Navigator.of(context).pop();
-                    _loadExpenses(); 
-              }
-              ),
               ],
-            );
-          },
-        );
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancel', style: TextStyle(color: Theme.of(context).textTheme.button?.color, fontWeight: FontWeight.bold)),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              TextButton(
+                child: Text('Add', style: TextStyle(color: Theme.of(context).textTheme.button?.color, fontWeight: FontWeight.bold)),
+                onPressed: () {
+                  final amount = double.tryParse(amountController.text);
+                  if (amount != null && amount > 0) {
+                    _addNewExpense(amount, category, _selectedDate);
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+              TextButton(
+                child: Text('Reset Expenses', style: TextStyle(color: Theme.of(context).textTheme.button?.color, fontWeight: FontWeight.bold)),
+                onPressed: () async {
+                  await dbHandler.deleteExpensesByCategory(category.id);
+                  Navigator.of(context).pop();
+                  _loadExpenses();
+                },
+              ),
+            ],
+          );
+        });
       },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    double monthlyExpenses = expenses
-        .where((exp) => exp.date.month == currentMonth.month && exp.date.year == currentMonth.year)
-        .fold(0.0, (sum, exp) => sum + exp.amount);
+    double monthlyExpenses = expenses.where((exp) => exp.date.month == currentMonth.month && exp.date.year == currentMonth.year).fold(0.0, (sum, exp) => sum + exp.amount);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -210,17 +168,17 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 setState(() {
                   currentMonth = DateTime(currentMonth.year, currentMonth.month - 1);
-                  _loadExpenses(); 
+                  _loadExpenses();
                 });
               },
             ),
-            Text('${DateFormat.yMMM().format(currentMonth)}: \$${monthlyExpenses.toStringAsFixed(2)}'),
+            Text('${DateFormat.yMMM().format(currentMonth)}: \$${monthlyExpenses.toStringAsFixed(2)}', style: TextStyle(color: Theme.of(context).textTheme.headline6?.color)),
             IconButton(
               icon: Icon(Icons.arrow_forward),
               onPressed: () {
                 setState(() {
                   currentMonth = DateTime(currentMonth.year, currentMonth.month + 1);
-                  _loadExpenses(); 
+                  _loadExpenses();
                 });
               },
             ),
@@ -252,8 +210,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     Icon(category.icon, size: 40, color: Colors.white),
-                    Container(height: 1,width: 1,),
-                    Container(height: 1,width: 1,),
                     Text(
                       category.title,
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),

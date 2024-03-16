@@ -3,7 +3,7 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:expense_tracker/home_screen.dart'; 
+import 'package:expense_tracker/home_screen.dart'; // Adjust based on your project structure
 
 class DatabaseHandler {
   static final DatabaseHandler _instance = DatabaseHandler.internal();
@@ -75,9 +75,9 @@ class DatabaseHandler {
     return res;
   }
 
-  Future<List<Expense>> getExpenses(List<Category> categories) async {
+  Future<List<Expense>> getExpenses(List<Category> categories, int month, int year) async {
     var dbClient = await db;
-    List<Map> list = await dbClient!.rawQuery('SELECT * FROM Expense');
+    List<Map> list = await dbClient!.rawQuery('SELECT * FROM Expense WHERE strftime("%m", date) = ? AND strftime("%Y", date) = ?', [month.toString().padLeft(2, '0'), year.toString()]);
     List<Expense> expenses = [];
     for (int i = 0; i < list.length; i++) {
       var expense = Expense(
@@ -125,32 +125,22 @@ class DatabaseHandler {
     _dbUpdateStreamController.add(true); 
     return res;
   }
-
+  
   Future<int> deleteExpensesByCategory(String categoryId) async {
     var dbClient = await db;
     int res = await dbClient!.delete("Expense", where: 'categoryId = ?', whereArgs: [categoryId]);
     _dbUpdateStreamController.add(true); 
     return res;
   }
-
   Future<List<Map<String, dynamic>>> getAggregatedExpensesByCategory() async {
-    var dbClient = await db;
-    List<Map> list = await dbClient!.rawQuery('''
-      SELECT c.title, SUM(e.amount) as totalAmount
-      FROM Expense e
-      INNER JOIN Category c ON e.categoryId = c.id
-      GROUP BY c.title
-    ''');
+  var dbClient = await db;
+  List<Map<String, dynamic>> list = await dbClient!.rawQuery('''
+    SELECT Category.title, SUM(Expense.amount) as totalAmount
+    FROM Expense
+    JOIN Category ON Expense.categoryId = Category.id
+    GROUP BY Category.id
+  ''');
+  return list;
+}
 
-    List<Map<String, dynamic>> aggregatedExpenses = list.map((item) => {
-      "title": item["title"],
-      "totalAmount": item["totalAmount"],
-    }).toList();
-
-    return aggregatedExpenses;
-  }
-
-  void dispose() {
-    _dbUpdateStreamController.close();
-  }
 }
