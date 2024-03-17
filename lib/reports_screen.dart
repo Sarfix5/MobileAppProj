@@ -22,16 +22,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Use Theme.of(context) to get the current theme's background color
     Color backgroundColor = Theme.of(context).scaffoldBackgroundColor;
-    Color textColor = Theme.of(context).textTheme.bodyText1?.color ?? Colors.black;
-    Color appBarColor = Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor;
+    Color pieChartTextColor = Colors.white;
+    Color appBarColor = Colors.black;
+
+    List<Color> monotoneColors = [
+      Colors.black,
+      Colors.grey[900]!,
+      Colors.grey[800]!,
+      Colors.grey[700]!,
+      Colors.grey[600]!,
+      Colors.grey[500]!,
+      Colors.grey[400]!,
+      Colors.grey[300]!,
+      Colors.grey[200]!,
+      Colors.grey[100]!,
+      Colors.white,
+    ];
 
     return Scaffold(
-      backgroundColor: backgroundColor, // Set the background color based on the theme
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        backgroundColor: appBarColor, // Set the AppBar color based on the theme
-        title: const Text('Report Screen'),
+        backgroundColor: appBarColor,
+        title: const Text('REPORT SCREEN',
+         style: TextStyle(color: Colors.white)),
+        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -43,24 +58,37 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 } else if (snapshot.hasError) {
-                  return Center(
-                      child: Text("Error: ${snapshot.error.toString()}"));
+                  return Center(child: Text("Error: ${snapshot.error.toString()}"));
                 } else {
+                  final totalAmount = snapshot.data!.fold<double>(0, (sum, item) => sum + double.parse(item['totalAmount'].toString()));
+                  int colorIndex = 0;
+
+                  
+                  List<PieChartSectionData> sections = snapshot.data!.asMap().entries.map((entry) {
+                    int idx = entry.key;
+                    Map<String, dynamic> data = entry.value;
+                    final color = monotoneColors[idx % monotoneColors.length];
+                    final value = double.parse(data['totalAmount'].toString());
+                    final percentage = (value / totalAmount * 100).toStringAsFixed(1);
+
+                    return PieChartSectionData(
+                      color: color,
+                      value: value,
+                      title: '$percentage%',
+                      radius: 140,
+                      titleStyle: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: pieChartTextColor,
+                      ),
+                      titlePositionPercentageOffset: 0.55,
+                    );
+                  }).toList();
+
                   return Center(
                     child: PieChart(
                       PieChartData(
-                        sections: snapshot.data!.map((data) {
-                          return PieChartSectionData(
-                            value: double.parse(data['totalAmount'].toString()),
-                            title: '${data['title']}: \$${data['totalAmount'].toStringAsFixed(2)}',
-                            radius: 140,
-                            titleStyle: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: textColor), // Use dynamic text color for titles
-                            titlePositionPercentageOffset: 0.55,
-                          );
-                        }).toList(),
+                        sections: sections,
                         centerSpaceRadius: 50,
                         sectionsSpace: 2,
                       ),
@@ -80,17 +108,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    return Center(
-                        child: Text("Error: ${snapshot.error.toString()}"));
+                    return Center(child: Text("Error: ${snapshot.error.toString()}"));
                   } else {
                     return ListView.builder(
                       itemCount: snapshot.data!.length,
                       itemBuilder: (context, index) {
                         var expense = snapshot.data![index];
-                        return ListTile(
-                          title: Text(
-                            '${expense['title']}: \$${expense['totalAmount'].toStringAsFixed(2)}',
-                            style: TextStyle(color: textColor), // Use dynamic text color
+                        final color = monotoneColors[index % monotoneColors.length];
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey, width: 0.5),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          child: ListTile(
+                            leading: Icon(Icons.circle, color: color),
+                            title: Text(
+                              '${expense['title']}: \$${expense['totalAmount'].toStringAsFixed(2)}',
+                              style: TextStyle(color: Theme.of(context).textTheme.bodyText1?.color ?? Colors.black),
+                            ),
                           ),
                         );
                       },

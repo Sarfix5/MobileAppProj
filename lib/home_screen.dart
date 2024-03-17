@@ -39,12 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
   final DatabaseHandler dbHandler = DatabaseHandler();
   List<Expense> expenses = [];
   List<Category> categories = [
-    Category(id: 'c1', title: 'Food', icon: Icons.fastfood, color: Colors.grey),
-    Category(id: 'c2', title: 'Gas', icon: Icons.car_crash, color: Colors.grey),
-    Category(id: 'c3', title: 'Housing & Utilities', icon: Icons.house, color: Colors.grey),
-    Category(id: 'c4', title: 'Entertainment', icon: Icons.videogame_asset, color: Colors.grey),
-    Category(id: 'c5', title: 'Shopping', icon: Icons.shopping_bag, color: Colors.grey),
-    Category(id: 'c6', title: 'Credit Cards', icon: Icons.add_card, color: Colors.grey),
+    Category(id: 'c1', title: 'Food', icon: Icons.fastfood, color: Colors.black),
+    Category(id: 'c2', title: 'Gas', icon: Icons.car_crash, color: Colors.black),
+    Category(id: 'c3', title: 'Housing & Utilities', icon: Icons.house, color: Colors.black54),
+    Category(id: 'c4', title: 'Entertainment', icon: Icons.videogame_asset, color: Colors.black54),
+    Category(id: 'c5', title: 'Shopping', icon: Icons.shopping_bag, color: Colors.black),
+    Category(id: 'c6', title: 'Credit Cards', icon: Icons.add_card, color: Colors.black),
   ];
   DateTime currentMonth = DateTime.now();
 

@@ -3,7 +3,7 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:expense_tracker/home_screen.dart'; // Adjust based on your project structure
+import 'package:expense_tracker/home_screen.dart';
 
 class DatabaseHandler {
   static final DatabaseHandler _instance = DatabaseHandler.internal();
@@ -125,7 +125,7 @@ class DatabaseHandler {
     _dbUpdateStreamController.add(true); 
     return res;
   }
-  
+
   Future<int> deleteExpensesByCategory(String categoryId) async {
     var dbClient = await db;
     int res = await dbClient!.delete("Expense", where: 'categoryId = ?', whereArgs: [categoryId]);
