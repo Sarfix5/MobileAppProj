@@ -2,7 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'theme_provider.dart'; // Make sure this import points to where your ThemeProvider class is located.
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
+  @override
+  _SettingsScreenState createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final Map<String, String> _budgetGoals = {
+    'Food': '',
+    'Gas': '',
+    'Housing & Utilities': '',
+    'Entertainment': '',
+    'Shopping': '',
+    'Credit Cards': '',
+  };
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -19,6 +33,12 @@ class SettingsScreen extends StatelessWidget {
             title: Text('Set Budget Goals'),
             onTap: () {
               _showBudgetDialog(context);
+            },
+          ),
+          ListTile(
+            title: Text('View Budget Goals'),
+            onTap: () {
+              _viewBudgetGoals(context);
             },
           ),
           ListTile(
@@ -46,15 +66,9 @@ class SettingsScreen extends StatelessWidget {
           title: Text('Set Budget Goals'),
           content: SingleChildScrollView(
             child: Column(
-              children: <Widget>[
-                _buildBudgetTextField('Food (\$)'),
-                _buildBudgetTextField('Gas (\$)'),
-                _buildBudgetTextField('Housing & Utilities (\$)'),
-                _buildBudgetTextField('Entertainment (\$)'),
-                _buildBudgetTextField('Shopping (\$)'),
-                _buildBudgetTextField('Credit Cards (\$)'),
-                // Add more text fields for other categories
-              ],
+              children: _budgetGoals.keys
+                  .map((category) => _buildBudgetTextField(category))
+                  .toList(),
             ),
           ),
           actions: <Widget>[
@@ -67,7 +81,38 @@ class SettingsScreen extends StatelessWidget {
             TextButton(
               child: Text('Save'),
               onPressed: () {
-                // Save budget goals to database or shared preferences
+                // Save budget goals to state
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _viewBudgetGoals(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Budget Goals'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _budgetGoals.entries
+                  .map(
+                    (entry) => ListTile(
+                      title: Text('${entry.key}: \$${entry.value}'),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Close'),
+              onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
@@ -81,6 +126,11 @@ class SettingsScreen extends StatelessWidget {
     return TextFormField(
       decoration: InputDecoration(labelText: category),
       keyboardType: TextInputType.number,
+      onChanged: (value) {
+        setState(() {
+          _budgetGoals[category] = value;
+        });
+      },
       // You can add validation if needed
     );
   }
